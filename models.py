@@ -28,10 +28,10 @@ class UserStatus(str, PyEnum):
 
 
 class UserRole(str, PyEnum):
-    CUSTOMER = "customer"
-    BOOSTER = "booster"
     ADMIN = "admin"
+    MANAGER = "manager"
     OPERATOR = "operator"
+    CONTENT_MANAGER = "content_manager"
 
 
 class BoosterTier(str, PyEnum):
@@ -139,33 +139,20 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str | None] = mapped_column(String(255))
     status: Mapped[UserStatus] = mapped_column(Enum(UserStatus), default=UserStatus.ACTIVE)
+    staff_role: Mapped[UserRole | None] = mapped_column(Enum(UserRole))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
-    roles: Mapped[list["UserRoleAssignment"]] = relationship(                                                             # для мультирольности ?
-        back_populates="user",
-        foreign_keys="UserRoleAssignment.user_id",
-    )
     booster_profile: Mapped["BoosterProfile | None"] = relationship(
         back_populates="user",
         uselist=False,
     )
-
-class UserRoleAssignment(Base):
-    __tablename__ = "user_roles"
-
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole), primary_key=True)
-    granted_by_admin_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
-    granted_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-
-    user: Mapped["User"] = relationship(foreign_keys=[user_id], back_populates="roles")
 
 
 class BoosterProfile(Base):
     __tablename__ = "booster_profiles"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    approval_status: Mapped[BoosterApprovalStatus] = mapped_column(                                                     # тут ли должна быть заявка
+    approval_status: Mapped[BoosterApprovalStatus] = mapped_column(
         Enum(BoosterApprovalStatus),
         default=BoosterApprovalStatus.DRAFT,
     )
@@ -211,11 +198,15 @@ class ServiceLot(Base):
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Base lot price for MVP pricing flow (EUR only).
+    base_price_eur: Mapped[float] = mapped_column(Float, default=0)  # для базовой цены не уверен что надо
     # booster_category: Mapped[BoosterCategory] = mapped_column(Enum(BoosterCategory))   для сортировки по категориям бустеру
-    execution_modes_allowed: Mapped[list[str] | None] = mapped_column(JSON)
     # tags: Mapped[list[str] | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    options: Mapped[list["ServiceOption"]] = relationship(back_populates="lot")
+    page: Mapped["ServicePage | None"] = relationship(back_populates="lot", uselist=False)
 
 class ServicePage(Base):
     __tablename__ = "service_pages"
@@ -226,11 +217,12 @@ class ServicePage(Base):
     status: Mapped[ServicePageStatus] = mapped_column(Enum(ServicePageStatus), default=ServicePageStatus.DRAFT)
     title: Mapped[str | None] = mapped_column(String(255))
     meta_json: Mapped[dict | None] = mapped_column(JSON)
-    created_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
-    updated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     published_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    lot: Mapped["ServiceLot"] = relationship(back_populates="page")
+    blocks: Mapped[list["ServicePageBlock"]] = relationship(back_populates="page")
 
 
 class ServicePageBlock(Base):
@@ -244,6 +236,8 @@ class ServicePageBlock(Base):
     payload_json: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    page: Mapped["ServicePage"] = relationship(back_populates="blocks")
 
 
 # class PageBlockTypeSchema(Base):
@@ -262,22 +256,26 @@ class ServiceOption(Base):
     lot_id: Mapped[int] = mapped_column(ForeignKey("service_lots.id"))
     code: Mapped[str] = mapped_column(String(100))
     value_type: Mapped[str] = mapped_column(String(50))
+    # Includes option-level price deltas/multipliers for backend calculation.
     config_json: Mapped[dict | None] = mapped_column(JSON)
     is_required: Mapped[bool] = mapped_column(Boolean, default=False)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
+    lot: Mapped["ServiceLot"] = relationship(back_populates="options") #зач мне двухсторонняя связь
 
-class PricingRuleSet(Base):
-    __tablename__ = "pricing_rule_sets"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    scope_type: Mapped[PricingScope] = mapped_column(Enum(PricingScope))
-    scope_id: Mapped[int] = mapped_column(Integer)
-    currency: Mapped[str] = mapped_column(String(3), default="EUR")
-    rules_json: Mapped[dict | None] = mapped_column(JSON)
-    version: Mapped[int] = mapped_column(Integer, default=1)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+# Future: advanced pricing rules per category/lot (kept commented intentionally).
+# class PricingRuleSet(Base):
+#     __tablename__ = "pricing_rule_sets"
+#
+#     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+#     scope_type: Mapped[PricingScope] = mapped_column(Enum(PricingScope))
+#     scope_id: Mapped[int] = mapped_column(Integer)
+#     currency: Mapped[str] = mapped_column(String(3), default="EUR")
+#     rules_json: Mapped[dict | None] = mapped_column(JSON)
+#     version: Mapped[int] = mapped_column(Integer, default=1)
+#     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+#     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class Promotion(Base):
@@ -285,7 +283,7 @@ class Promotion(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     scope_type: Mapped[PromotionScope] = mapped_column(Enum(PromotionScope))
-    scope_id: Mapped[int] = mapped_column(Integer)
+    scope_id: Mapped[int] = mapped_column(Integer) # я бы хотел как то сделать привязку к ид автоматическую без ручного ввода ид
     promo_type: Mapped[PromotionType] = mapped_column(Enum(PromotionType))
     value: Mapped[float | None] = mapped_column(Float)
     tag: Mapped[str | None] = mapped_column(String(50))
@@ -332,7 +330,6 @@ class Order(Base):
     selected_options_json: Mapped[dict | None] = mapped_column(JSON)
     price_snapshot_json: Mapped[dict | None] = mapped_column(JSON)                                                      #нужно ли хранить это прям джсоном?
 
-    booster_character_text: Mapped[str | None] = mapped_column(String(255))
     internal_note: Mapped[str | None] = mapped_column(Text)
 
     paid_at: Mapped[datetime | None] = mapped_column(DateTime)
@@ -485,4 +482,3 @@ class ChatMessage(Base):
 #     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
 #     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 #     expires_at: Mapped[datetime] = mapped_column(DateTime)
-

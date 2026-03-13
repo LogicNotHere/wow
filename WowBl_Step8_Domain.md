@@ -30,7 +30,9 @@
 ### `User`
 Единая сущность аккаунта.
 - Атрибуты: email/логин, пароль/SSO, статус (active/banned), created_at.
-- Роли (RBAC/flags): `customer`, `booster`, `admin`, `operator` (контент/лоты).
+- `staff_role` (nullable): `admin`, `manager`, `operator`, `content_manager`.
+- `customer` не требует отдельной роли: любой зарегистрированный `User` может покупать.
+- `booster` определяется наличием `BoosterProfile`, а не ролью.
 
 ### `OperatorPermissions` (концептуально)
 Если роль `operator` нужна “как у админа, но безопасно”, фиксируем границу доступа:
@@ -41,7 +43,7 @@
 Профиль и допуски бустера.
 - Связь: `User (1) → BoosterProfile (0..1)`.
 - Атрибуты:
-  - `approval_status` (draft/pending/approved/declined) — стадия рассмотрения профиля до выдачи роли “Booster”
+  - `approval_status` (draft/pending/approved/declined) — стадия рассмотрения профиля до допуска к booster-сценариям
   - `tier`/уровень (например `booster`, `super_booster`)
   - набор навыков/категорий (MVP: `mythic_plus`, `raid`, `pvp`, `professions`), рейтинг/статистика
   - `is_banned` (или через `User.status`)
@@ -80,7 +82,7 @@
 
 ### `ServiceLot` (или `Service`)
 “Лот/услуга” внутри категории (то, что выбирает клиент).
-- Атрибуты: название, описание, активность, правила доступности.
+- Атрибуты: название, описание, активность, `base_price_eur`, правила доступности.
 - Связь: `ServiceCategory (1) → ServiceLot (N)`.
 - Matching: `booster_category` (MVP fixed set: `mythic_plus`, `raid`, `pvp`, `professions`) — чтобы понимать, каким бустерам показывать заказ (независимо от витринного дерева).
 
@@ -90,17 +92,12 @@
   - enum/choice
   - integer range (например количество ранов)
   - boolean (например “стрим”)
+- В `config_json` храним не только UI-конфиг, но и ценовой эффект опции (`price_delta`/`multiplier`).
 - Связь: `ServiceLot (1) → ServiceOption (N)`.
 
-### `PricingRuleSet`
-Правила расчёта цены.
-- Скоуп: на `ServiceCategory` или на `ServiceLot`.
-- Содержит:
-  - base price
-  - коэффициенты/множители (в т.ч. piloted multiplier)
-  - формулы по primary driver (M+ level, raid difficulty, etc.)
-  - округление
-Правило для дерева категорий: если `PricingRuleSet` применён к категории, он действует на **поддерево**, пока лот не переопределит правила.
+### `PricingRuleSet` (post‑MVP, отключено)
+Сложный rules engine для pricing оставлен как future-вариант и в текущей модели закомментирован.
+MVP-подход: цена считается от `ServiceLot.base_price_eur` + ценовые эффекты выбранных `ServiceOption`.
 
 ### `Promotion`
 Промо/скидки/витринные теги.
