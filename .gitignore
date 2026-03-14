@@ -1,0 +1,12 @@
+.env
+.pycache/
+.pytest_cache/
+.venv/
+__pycache__/
+*.pyc
+.idea/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+.DS_Store

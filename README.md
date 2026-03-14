@@ -2,7 +2,7 @@
 
 Черновик backend/domain модели для WoW boosting marketplace.
 
-Основа берётся из [WowBl.md](/Users/vitalii/Projects/WowShop/WowBl.md): один заказ = один лот, backend считает цену, оплата на MVP подтверждается вручную админом, бустер получает заказ только после `Paid`.
+Основа берётся из [WowBl.md](/Users/vitalii/Projects/WowShop/docs/WowBl.md): один заказ = один лот, backend считает цену, оплата на MVP подтверждается вручную админом, бустер получает заказ только после `Paid`.
 
 ## Текущие решения
 

@@ -1,0 +1,17 @@
+[flake8]
+max-line-length = 80
+show-source = True
+suppress_none_returning = True
+
+ignore = E711, W503, W504
+
+per-file-ignores =
+    __init__.py:F401
+
+exclude =
+    .git
+    .idea
+    .venv
+    .pycache
+    tests
+    migrations

@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wowshop"
+version = "0.1.0"
+description = "WowShop backend"
+requires-python = ">=3.12"
+dependencies = [
+  "alembic>=1.14.0,<2.0.0",
+  "asyncpg>=0.30.0,<1.0.0",
+  "fastapi>=0.116.0,<1.0.0",
+  "psycopg[binary]>=3.2.0,<4.0.0",
+  "sqlalchemy>=2.0.36,<3.0.0",
+  "uvicorn[standard]>=0.34.0,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "flake8>=7.1.0,<8.0.0",
+  "isort>=5.13.0,<6.0.0",
+  "mypy>=1.15.0,<2.0.0",
+  "pre-commit>=4.2.0,<5.0.0",
+]
+
+[tool.isort]
+line_length = 80
+force_grid_wrap = 2
+combine_as_imports = true
+multi_line_output = 3
+length_sort = true
+known_first_party = ["wow_shop"]
+skip = ["wow_shop/_local.py", ".venv", "__init__.py"]
+
+# Placeholder for project-specific patterns if needed later.
+skip_glob = []
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wow_shop*"]

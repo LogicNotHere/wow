@@ -1,0 +1,95 @@
+version: '3'
+
+tasks:
+  default:
+    desc: Start server task
+    cmds:
+      - task: server
+
+  server:
+    desc: Start api + postgres in detached mode
+    cmds:
+      - docker compose up -d
+
+  build:
+    desc: Build docker images
+    cmds:
+      - docker compose build
+
+  isort:
+    desc: Run isort inside api container
+    cmds:
+      - docker compose run --rm --no-deps api isort --settings-path pyproject.toml wow_shop
+
+  flake8:
+    desc: Run flake8 inside api container
+    cmds:
+      - docker compose run --rm --no-deps api flake8 --config=.flake8 wow_shop
+
+  mypy:
+    desc: Run mypy inside api container
+    cmds:
+      - docker compose run --rm --no-deps api mypy --config-file=mypy.ini wow_shop
+
+  pre_commit:
+    desc: Run isort + flake8 + mypy
+    deps: [build]
+    cmds:
+      - task: isort
+      - task: flake8
+      - task: mypy
+
+  down:
+    desc: Stop and remove containers
+    cmds:
+      - docker compose down
+
+  restart:
+    desc: Restart running services
+    cmds:
+      - docker compose restart
+
+  logs:
+    desc: Placeholder logs task (set concrete stream later)
+    cmds:
+      - 'docker compose exec api sh -c "echo TODO set logs command (for example docker compose logs -f api)"'
+
+  ps:
+    desc: Show compose services status
+    cmds:
+      - docker compose ps
+
+  shell:
+    desc: Open shell inside api container
+    cmds:
+      - docker compose exec api sh
+
+  test:
+    desc: Placeholder for tests inside api container
+    cmds:
+      - 'docker compose exec api sh -c "echo TODO add test command (pytest or equivalent)"'
+
+  migrate:
+    desc: Apply all migrations (upgrade head)
+    cmds:
+      - docker compose exec api alembic upgrade head
+
+  makemigrations:
+    desc: Generate migration (MSG="message")
+    cmds:
+      - 'docker compose exec api sh -c ''alembic revision --autogenerate -m "${MSG:-migration}"'''
+
+  downgrade:
+    desc: Downgrade one revision
+    cmds:
+      - docker compose exec api alembic downgrade -1
+
+  current:
+    desc: Show current migration revision
+    cmds:
+      - docker compose exec api alembic current
+
+  history:
+    desc: Show migration history
+    cmds:
+      - docker compose exec api alembic history
