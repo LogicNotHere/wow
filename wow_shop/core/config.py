@@ -1,5 +1,5 @@
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 
 
 def _read_bool(name: str, default: bool) -> bool:
@@ -31,7 +31,9 @@ class Settings:
     access_token_expire_minutes: int = int(
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
     )
-    cors_allow_origins: str = os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000")
+    cors_allow_origins: str = os.getenv(
+        "CORS_ALLOW_ORIGINS", "http://localhost:3000"
+    )
     sentry_dsn: str = os.getenv("SENTRY_DSN", "")
 
 

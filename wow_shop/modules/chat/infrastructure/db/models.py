@@ -3,11 +3,11 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import (
+    Text,
+    String,
+    Integer,
     DateTime,
     ForeignKey,
-    Integer,
-    String,
-    Text,
     UniqueConstraint,
     func,
 )

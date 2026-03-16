@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum as PyEnum
+from datetime import datetime
 
 from sqlalchemy import (
-    Boolean,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Integer,
     JSON,
-    String,
+    Enum,
     Text,
+    String,
+    Boolean,
+    Integer,
+    DateTime,
+    ForeignKey,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column

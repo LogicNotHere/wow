@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum as PyEnum
+from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Enum, Text, String, Integer, DateTime, ForeignKey, func
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from wow_shop.infrastructure.db.base import Base
 

@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum as PyEnum
+from datetime import datetime
 
 from sqlalchemy import (
-    CheckConstraint,
-    DateTime,
     Enum,
-    Float,
-    ForeignKey,
-    Integer,
     Text,
+    Float,
+    Integer,
+    DateTime,
+    ForeignKey,
+    CheckConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -37,8 +37,12 @@ class Payment(Base):
         Enum(PaymentStatus, name="payments_payment_status_enum"),
         default=PaymentStatus.CONFIRMED,
     )
-    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    confirmed_by_admin_id: Mapped[int | None] = mapped_column(ForeignKey("auth_users.id"))
+    confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+    confirmed_by_admin_id: Mapped[int | None] = mapped_column(
+        ForeignKey("auth_users.id")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -48,7 +52,9 @@ class Payment(Base):
 class Refund(Base):
     __tablename__ = "payments_refunds"
     __table_args__ = (
-        CheckConstraint("amount_eur IS NULL OR amount_eur >= 0", name="amount_eur_positive"),
+        CheckConstraint(
+            "amount_eur IS NULL OR amount_eur >= 0", name="amount_eur_positive"
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -58,7 +64,9 @@ class Refund(Base):
     )
     amount_eur: Mapped[float | None] = mapped_column(Float)
     reason: Mapped[str | None] = mapped_column(Text)
-    decided_by_admin_id: Mapped[int] = mapped_column(ForeignKey("auth_users.id"))
+    decided_by_admin_id: Mapped[int] = mapped_column(
+        ForeignKey("auth_users.id")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

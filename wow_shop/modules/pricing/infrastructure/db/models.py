@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum as PyEnum
+from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, Integer, String
+from sqlalchemy import Enum, Float, String, Boolean, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
 from wow_shop.infrastructure.db.base import Base

@@ -1,5 +1,14 @@
 version: '3'
 
+vars:
+  COMPOSE: docker compose
+  API_SERVICE: api
+  DB_SERVICE: postgres
+  APP_PACKAGE: wow_shop
+  API_EXEC: '{{.COMPOSE}} exec {{.API_SERVICE}}'
+  API_RUN: '{{.COMPOSE}} run --rm --no-deps {{.API_SERVICE}}'
+  ALEMBIC_EXEC: '{{.API_EXEC}} alembic'
+
 tasks:
   default:
     desc: Start server task
@@ -9,87 +18,103 @@ tasks:
   server:
     desc: Start api + postgres in detached mode
     cmds:
-      - docker compose up -d
+      - '{{.COMPOSE}} up -d'
 
   build:
     desc: Build docker images
     cmds:
-      - docker compose build
+      - '{{.COMPOSE}} build'
 
   isort:
     desc: Run isort inside api container
     cmds:
-      - docker compose run --rm --no-deps api isort --settings-path pyproject.toml wow_shop
+      - '{{.API_RUN}} isort --settings-path pyproject.toml {{.APP_PACKAGE}}'
+
+  black:
+    desc: Run black formatter inside api container
+    cmds:
+      - '{{.API_RUN}} black --config=pyproject.toml {{.APP_PACKAGE}}'
 
   flake8:
     desc: Run flake8 inside api container
     cmds:
-      - docker compose run --rm --no-deps api flake8 --config=.flake8 wow_shop
+      - '{{.API_RUN}} flake8 --config=.flake8 {{.APP_PACKAGE}}'
 
   mypy:
     desc: Run mypy inside api container
     cmds:
-      - docker compose run --rm --no-deps api mypy --config-file=mypy.ini wow_shop
+      - '{{.API_RUN}} mypy --config-file=mypy.ini {{.APP_PACKAGE}}'
 
-  pre_commit:
-    desc: Run isort + flake8 + mypy
+  pre-commit:
+    desc: Run isort + black + flake8 + mypy
     deps: [build]
     cmds:
       - task: isort
+      - task: black
       - task: flake8
       - task: mypy
 
   down:
     desc: Stop and remove containers
     cmds:
-      - docker compose down
+      - '{{.COMPOSE}} down'
+
+  init_db:
+    desc: Reset local DB volume, start postgres, apply migrations, leave seed as TODO
+    cmds:
+      - '{{.COMPOSE}} down -v'
+      - '{{.COMPOSE}} up -d {{.DB_SERVICE}}'
+      - '{{.COMPOSE}} up -d {{.API_SERVICE}}'
+      - '{{.ALEMBIC_EXEC}} upgrade head'
+      - '{{.API_EXEC}} sh -c "echo TODO add seed command when initial data exists"'
 
   restart:
     desc: Restart running services
     cmds:
-      - docker compose restart
+      - '{{.COMPOSE}} restart'
 
   logs:
     desc: Placeholder logs task (set concrete stream later)
     cmds:
-      - 'docker compose exec api sh -c "echo TODO set logs command (for example docker compose logs -f api)"'
+      - '{{.API_EXEC}} sh -c "echo TODO set logs command (for example docker compose logs -f api)"'
 
   ps:
     desc: Show compose services status
     cmds:
-      - docker compose ps
+      - '{{.COMPOSE}} ps'
 
   shell:
     desc: Open shell inside api container
     cmds:
-      - docker compose exec api sh
+      - '{{.API_EXEC}} sh'
 
   test:
     desc: Placeholder for tests inside api container
     cmds:
-      - 'docker compose exec api sh -c "echo TODO add test command (pytest or equivalent)"'
-
+      - '{{.API_EXEC}} sh -c "echo TODO add test command (pytest or equivalent)"'
+      
+#Alembic
   migrate:
     desc: Apply all migrations (upgrade head)
     cmds:
-      - docker compose exec api alembic upgrade head
+      - '{{.ALEMBIC_EXEC}} upgrade head'
 
   makemigrations:
     desc: Generate migration (MSG="message")
     cmds:
-      - 'docker compose exec api sh -c ''alembic revision --autogenerate -m "${MSG:-migration}"'''
+      - '{{.API_EXEC}} sh -c ''alembic revision --autogenerate -m "${MSG:-migration}"'''
 
   downgrade:
     desc: Downgrade one revision
     cmds:
-      - docker compose exec api alembic downgrade -1
+      - '{{.ALEMBIC_EXEC}} downgrade -1'
 
   current:
     desc: Show current migration revision
     cmds:
-      - docker compose exec api alembic current
+      - '{{.ALEMBIC_EXEC}} current'
 
   history:
     desc: Show migration history
     cmds:
-      - docker compose exec api alembic history
+      - '{{.ALEMBIC_EXEC}} history'

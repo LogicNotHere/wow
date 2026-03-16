@@ -1,22 +1,22 @@
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum as PyEnum
+from datetime import datetime
 
 from sqlalchemy import (
     JSON,
-    Boolean,
-    DateTime,
     Enum,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
     Text,
+    Float,
+    String,
+    Boolean,
+    Integer,
+    DateTime,
+    ForeignKey,
     UniqueConstraint,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from wow_shop.infrastructure.db.base import Base
 
@@ -98,7 +98,9 @@ class ServicePage(Base):
     )
     title: Mapped[str | None] = mapped_column(String(255))
     meta_json: Mapped[dict | None] = mapped_column(JSON)
-    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

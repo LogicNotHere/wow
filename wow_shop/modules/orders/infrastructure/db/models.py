@@ -1,9 +1,18 @@
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum as PyEnum
+from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import (
+    JSON,
+    Enum,
+    Text,
+    String,
+    Integer,
+    DateTime,
+    ForeignKey,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from wow_shop.infrastructure.db.base import Base
@@ -62,11 +71,15 @@ class Order(Base):
         Enum(ExecutionMode, name="orders_order_execution_mode_enum")
     )
 
-    customer_user_id: Mapped[int | None] = mapped_column(ForeignKey("auth_users.id"))
+    customer_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("auth_users.id")
+    )
     guest_contact_id: Mapped[int | None] = mapped_column(
         ForeignKey("orders_guest_contacts.id")
     )
-    booster_user_id: Mapped[int | None] = mapped_column(ForeignKey("auth_users.id"))
+    booster_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("auth_users.id")
+    )
     service_lot_id: Mapped[int] = mapped_column(
         ForeignKey("catalog_service_lots.id")
     )
@@ -76,9 +89,15 @@ class Order(Base):
     internal_note: Mapped[str | None] = mapped_column(Text)
 
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    paid_by_admin_id: Mapped[int | None] = mapped_column(ForeignKey("auth_users.id"))
-    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    in_progress_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    paid_by_admin_id: Mapped[int | None] = mapped_column(
+        ForeignKey("auth_users.id")
+    )
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+    in_progress_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
@@ -114,13 +133,17 @@ class OrderClaim(Base):
     __tablename__ = "orders_order_claims"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    order_id: Mapped[int] = mapped_column(ForeignKey("orders_orders.id"), index=True)
+    order_id: Mapped[int] = mapped_column(
+        ForeignKey("orders_orders.id"), index=True
+    )
     booster_user_id: Mapped[int] = mapped_column(ForeignKey("auth_users.id"))
     status: Mapped[ClaimStatus] = mapped_column(
         Enum(ClaimStatus, name="orders_order_claim_status_enum"),
         default=ClaimStatus.PENDING,
     )
-    decided_by_admin_id: Mapped[int | None] = mapped_column(ForeignKey("auth_users.id"))
+    decided_by_admin_id: Mapped[int | None] = mapped_column(
+        ForeignKey("auth_users.id")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
