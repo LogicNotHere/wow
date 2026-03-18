@@ -32,16 +32,29 @@ def _load_dotenv_if_present() -> None:
 
 def _as_sync_database_url(database_url: str) -> str:
     if database_url.startswith("postgresql+asyncpg://"):
-        return database_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+        return database_url.replace(
+            "postgresql+asyncpg://",
+            "postgresql+psycopg://",
+            1,
+        )
     return database_url
 
 
 def _get_database_url() -> str:
     _load_dotenv_if_present()
     raw_url = os.getenv("DATABASE_URL")
-    if not raw_url:
-        raise RuntimeError("DATABASE_URL is required for Alembic migrations.")
-    return _as_sync_database_url(raw_url)
+    if raw_url:
+        return _as_sync_database_url(raw_url)
+
+    try:
+        from wow_shop.core.config_loader import load_settings
+
+        settings = load_settings()
+        return _as_sync_database_url(settings.db.url)
+    except Exception as exc:
+        raise RuntimeError(
+            "Failed to load database URL from DATABASE_URL or YAML config."
+        ) from exc
 
 
 def run_migrations_offline() -> None:

@@ -1,0 +1,25 @@
+app:
+  env: local
+  debug: false
+  host: 0.0.0.0
+  port: 8000
+  log_level: INFO
+
+db:
+  url: postgresql+asyncpg://postgres:postgres@postgres:5432/wow_shop
+
+redis:
+  url: redis://redis:6379/0
+
+jwt:
+  secret_key: change-me
+  algorithm: HS256
+  access_ttl_minutes: 20
+  refresh_ttl_days: 30
+
+cors:
+  allow_origins:
+    - http://localhost:3000
+
+sentry:
+  dsn: ""
