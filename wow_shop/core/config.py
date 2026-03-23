@@ -1,6 +1,20 @@
 from __future__ import annotations
 
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict
+
+
+class YamlStrEnum(str, Enum):
+    pass
+
+
+class LogLevel(YamlStrEnum):
+    CRITICAL = "CRITICAL"
+    ERROR = "ERROR"
+    WARNING = "WARNING"
+    INFO = "INFO"
+    DEBUG = "DEBUG"
 
 
 class AppSettings(BaseModel):
@@ -10,7 +24,7 @@ class AppSettings(BaseModel):
     debug: bool
     host: str
     port: int
-    log_level: str
+    log_level: LogLevel
 
 
 class DbSettings(BaseModel):
@@ -30,6 +44,7 @@ class JwtSettings(BaseModel):
 
     secret_key: str
     algorithm: str
+    issuer: str
     access_ttl_minutes: int
     refresh_ttl_days: int
 
