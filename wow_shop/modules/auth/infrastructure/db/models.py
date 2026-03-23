@@ -15,6 +15,8 @@ class UserStatus(str, PyEnum):
 
 
 class UserRole(str, PyEnum):
+    CUSTOMER = "customer"
+    BOOSTER = "booster"
     ADMIN = "admin"
     MANAGER = "manager"
     OPERATOR = "operator"
@@ -43,8 +45,9 @@ class User(Base):
         Enum(UserStatus, name="auth_user_status_enum"),
         default=UserStatus.ACTIVE,
     )
-    staff_role: Mapped[UserRole | None] = mapped_column(
-        Enum(UserRole, name="auth_user_staff_role_enum")
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, name="auth_user_role_enum"),
+        default=UserRole.CUSTOMER,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

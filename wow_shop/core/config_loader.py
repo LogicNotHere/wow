@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import Any, Mapping
+from pathlib import Path
 
 import yaml
 
 from wow_shop.core.config import Settings
-
 
 CONFIG_ENV = "CONFIG"
 OVERRIDE_CONFIG_ENV = "OVERRIDE_CONFIG"
@@ -53,9 +52,7 @@ def load_settings(
 ) -> Settings:
     raw_base_path = config_path or os.getenv(CONFIG_ENV)
     if not raw_base_path:
-        raise ConfigError(
-            "Config should be specified with env var CONFIG."
-        )
+        raise ConfigError("Config should be specified with env var CONFIG.")
 
     base_path = _resolve_path(raw_base_path)
     base_payload = _read_yaml(base_path)

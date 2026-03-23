@@ -25,7 +25,7 @@ def upgrade() -> None:
     sa.Column('email', sa.String(length=255), nullable=True),
     sa.Column('password_hash', sa.String(length=255), nullable=True),
     sa.Column('status', sa.Enum('ACTIVE', 'BANNED', name='auth_user_status_enum'), nullable=False),
-    sa.Column('staff_role', sa.Enum('ADMIN', 'MANAGER', 'OPERATOR', 'CONTENT_MANAGER', name='auth_user_staff_role_enum'), nullable=True),
+    sa.Column('role', sa.Enum('CUSTOMER', 'BOOSTER', 'ADMIN', 'MANAGER', 'OPERATOR', 'CONTENT_MANAGER', name='auth_user_role_enum'), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_auth_users')),
     sa.UniqueConstraint('email', name=op.f('uq_auth_users__email'))
