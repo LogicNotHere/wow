@@ -3,15 +3,19 @@
 from wow_shop.infrastructure.db.base import Base
 from wow_shop.infrastructure.db.models import metadata
 from wow_shop.infrastructure.db.session import (
+    close_dbs,
+    handle_session,
     get_async_session_factory,
     get_engine,
-    get_db_session,
+    s,
 )
 
 __all__ = [
     "Base",
+    "close_dbs",
+    "handle_session",
     "get_async_session_factory",
     "get_engine",
-    "get_db_session",
     "metadata",
+    "s",
 ]

@@ -1,11 +1,12 @@
 """Auth application layer."""
 
-from wow_shop.modules.auth.application.auth_service import (
+from wow_shop.modules.auth.application.errors import (
     AuthError,
     AuthValidationError,
     InvalidCredentialsError,
     UserAlreadyExistsError,
-    get_me,
+)
+from wow_shop.modules.auth.application.auth_service import (
     login_user,
     logout,
     refresh_tokens,
@@ -17,7 +18,6 @@ __all__ = [
     "AuthValidationError",
     "InvalidCredentialsError",
     "UserAlreadyExistsError",
-    "get_me",
     "login_user",
     "logout",
     "refresh_tokens",

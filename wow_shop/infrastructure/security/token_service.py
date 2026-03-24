@@ -46,19 +46,20 @@ class TokenService:
             refresh_token=refresh_token,
         )
 
-    async def refresh_tokens(self, refresh_token: str, role: str) -> TokenPair:
-        old_payload = self._parse_refresh_payload(refresh_token)
-        await self._ensure_refresh_token_active(old_payload.jti)
+    async def refresh_tokens(
+        self, refresh_payload: RefreshPayload, role: str
+    ) -> TokenPair:
+        await self._ensure_refresh_token_active(refresh_payload.jti)
 
         new_refresh_token = self._jwt_manager.build_refresh_token(
-            user_id=old_payload.user_id
+            user_id=refresh_payload.user_id
         )
         new_refresh_payload = self._parse_refresh_payload(new_refresh_token)
         await self._save_refresh_payload(new_refresh_payload)
-        await self._refresh_store.delete(old_payload.jti)
+        await self._refresh_store.delete(refresh_payload.jti)
 
         new_access_token = self._jwt_manager.build_access_token(
-            user_id=old_payload.user_id,
+            user_id=refresh_payload.user_id,
             role=role,
         )
         return TokenPair(

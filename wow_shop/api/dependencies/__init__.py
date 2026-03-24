@@ -5,7 +5,10 @@ from wow_shop.api.dependencies.permissions import (
     require_booster_access,
     require_roles,
 )
-from wow_shop.api.dependencies.token import get_access_payload, get_bearer_token
+from wow_shop.api.dependencies.token import (
+    get_access_payload,
+    get_bearer_token,
+)
 
 __all__ = [
     "CurrentUser",

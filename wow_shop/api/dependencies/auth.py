@@ -27,4 +27,3 @@ def get_current_user(
         jti=payload.jti,
         exp=payload.exp,
     )
-

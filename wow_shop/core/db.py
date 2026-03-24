@@ -1,7 +1,9 @@
 from wow_shop.core.config_loader import get_settings
 from wow_shop.infrastructure.db.session import (
+    s,
+    close_dbs,
     get_engine,
-    get_db_session,
+    handle_session,
     get_async_session_factory,
 )
 
@@ -12,8 +14,10 @@ def get_database_url() -> str:
 
 
 __all__ = [
+    "close_dbs",
+    "handle_session",
     "get_async_session_factory",
     "get_engine",
     "get_database_url",
-    "get_db_session",
+    "s",
 ]
