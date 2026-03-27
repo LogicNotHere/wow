@@ -4,8 +4,8 @@ from wow_shop.shared.contracts.models import (
     BaseHttpResponseModel,
     BaseRequestModel,
     BaseResponseDataModel,
-    ListResponseData,
-    ListResponseItems,
+    ListResponses,
+    ListResponsesOnce,
     ORJsonModel,
     ResponseStatus,
 )
@@ -14,8 +14,8 @@ __all__ = [
     "BaseHttpResponseModel",
     "BaseRequestModel",
     "BaseResponseDataModel",
-    "ListResponseData",
-    "ListResponseItems",
+    "ListResponses",
+    "ListResponsesOnce",
     "ORJsonModel",
     "ResponseStatus",
 ]

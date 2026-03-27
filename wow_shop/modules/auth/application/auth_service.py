@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy import select
 
 from wow_shop.infrastructure.db.session import s
+from wow_shop.modules.auth.constants import PASSWORD_MIN_LENGTH
 from wow_shop.modules.auth.application.errors import (
     AuthValidationError,
     UserAlreadyExistsError,
@@ -31,8 +32,10 @@ def _validate_email(email: str) -> str:
 
 
 def _validate_password(password: str) -> None:
-    if len(password) < 8:
-        raise AuthValidationError("Password must be at least 8 characters.")
+    if len(password) < PASSWORD_MIN_LENGTH:
+        raise AuthValidationError(
+            f"Password must be at least {PASSWORD_MIN_LENGTH} characters."
+        )
 
 
 def _resolve_role_for_access_token(user: User) -> str:

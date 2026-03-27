@@ -13,6 +13,10 @@ class TokenInvalidError(TokenError):
     """Token has invalid signature or payload."""
 
 
+class TokenInvalidRoleError(TokenInvalidError):
+    """Token contains unsupported role value."""
+
+
 class TokenExpiredError(TokenError):
     """Token is expired."""
 

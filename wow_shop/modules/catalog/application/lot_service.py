@@ -1,0 +1,1 @@
+"""Catalog lot application services."""

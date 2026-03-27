@@ -1,0 +1,1 @@
+"""Catalog lot request models."""

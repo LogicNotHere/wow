@@ -23,7 +23,7 @@ from wow_shop.modules.auth.application.auth_service import (
     refresh_tokens,
 )
 
-public_router = APIRouter(tags=["auth"])
+public_router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @public_router.post(

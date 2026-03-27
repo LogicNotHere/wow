@@ -11,12 +11,20 @@ from wow_shop.core.errors import (
     ConflictApiException,
     InternalApiException,
     BadRequestApiException,
+    NotFoundApiException,
     UnauthorizedApiException,
 )
 from wow_shop.modules.auth.application.errors import (
     AuthValidationError,
     UserAlreadyExistsError,
     InvalidCredentialsError,
+)
+from wow_shop.modules.catalog.application.errors import (
+    CatalogValidationError,
+    ParentCategoryNotFoundError,
+    CategoryAlreadyExistsError,
+    GameAlreadyExistsError,
+    GameNotFoundError,
 )
 from wow_shop.infrastructure.security.token_errors import (
     TokenExpiredError,
@@ -30,7 +38,7 @@ log = logging.getLogger(__name__)
 
 
 def _map_application_error(exc: ApplicationError) -> ApiException:
-    if isinstance(exc, (AuthValidationError,)):
+    if isinstance(exc, (AuthValidationError, CatalogValidationError)):
         return BadRequestApiException(str(exc))
 
     if isinstance(
@@ -45,7 +53,13 @@ def _map_application_error(exc: ApplicationError) -> ApiException:
     ):
         return UnauthorizedApiException(str(exc))
 
+    if isinstance(exc, (ParentCategoryNotFoundError, GameNotFoundError)):
+        return NotFoundApiException(str(exc))
+
     if isinstance(exc, (UserAlreadyExistsError, RefreshTokenConflictError)):
+        return ConflictApiException(str(exc))
+
+    if isinstance(exc, (CategoryAlreadyExistsError, GameAlreadyExistsError)):
         return ConflictApiException(str(exc))
 
     return InternalApiException()
