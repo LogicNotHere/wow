@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Annotated
 from collections.abc import Iterable
 
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 
-from wow_shop.api.dependencies.auth import CurrentUser, get_current_user
 from wow_shop.modules.auth.infrastructure.db.models import UserRole
+from wow_shop.shared.auth.context import CurrentUser, get_auth_user
 
 
 class RoleAccessValidator:
@@ -15,23 +14,29 @@ class RoleAccessValidator:
         *,
         allowed_roles: Iterable[UserRole],
         detail: str,
+        unauthenticated_detail: str = "Authorization required.",
+        invalid_role_detail: str = "Invalid auth role context.",
     ) -> None:
         self._allowed_roles = frozenset(allowed_roles)
         self._detail = detail
+        self._unauthenticated_detail = unauthenticated_detail
+        self._invalid_role_detail = invalid_role_detail
 
-    def __call__(
-        self,
-        current_user: Annotated[CurrentUser, Depends(get_current_user)],
-    ) -> CurrentUser:
-        try:
-            role = UserRole(current_user.role)
-        except ValueError:
+    def __call__(self) -> CurrentUser:
+        current_user = get_auth_user()
+        if current_user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=self._unauthenticated_detail,
+            )
+
+        if not isinstance(current_user.role, UserRole):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=self._detail,
-            ) from None
+                detail=self._invalid_role_detail,
+            )
 
-        if role not in self._allowed_roles:
+        if current_user.role not in self._allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=self._detail,
