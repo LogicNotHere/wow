@@ -1,66 +1,66 @@
 from __future__ import annotations
 
-from enum import Enum as PyEnum
-from datetime import datetime
+from enum import StrEnum, auto
 
-from sqlalchemy import Enum, Text, String, Integer, DateTime, ForeignKey, func
+from sqlalchemy import Enum as SQLEnum, Text, ForeignKey
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from wow_shop.infrastructure.db.base import Base
+from wow_shop.infrastructure.db.mixins import (
+    CreateUpdateMixin,
+    CreatedAtMixin,
+    CreatedByMixin,
+)
+from wow_shop.infrastructure.db.types import int_pk, str255
 
 
-class UserStatus(str, PyEnum):
-    ACTIVE = "active"
-    BANNED = "banned"
+class UserStatus(StrEnum):
+    ACTIVE = auto()
+    BANNED = auto()
 
 
-class UserRole(str, PyEnum):
-    CUSTOMER = "customer"
-    BOOSTER = "booster"
-    ADMIN = "admin"
-    MANAGER = "manager"
-    OPERATOR = "operator"
-    CONTENT_MANAGER = "content_manager"
+class UserRole(StrEnum):
+    CUSTOMER = auto()
+    BOOSTER = auto()
+    ADMIN = auto()
+    MANAGER = auto()
+    OPERATOR = auto()
+    CONTENT_MANAGER = auto()
 
 
-class BoosterTier(str, PyEnum):
-    BOOSTER = "booster"
-    SUPER_BOOSTER = "super_booster"
+class BoosterTier(StrEnum):
+    BOOSTER = auto()
+    SUPER_BOOSTER = auto()
 
 
-class BoosterApprovalStatus(str, PyEnum):
-    DRAFT = "draft"
-    PENDING = "pending"
-    APPROVED = "approved"
-    DECLINED = "declined"
+class BoosterApprovalStatus(StrEnum):
+    DRAFT = auto()
+    PENDING = auto()
+    APPROVED = auto()
+    DECLINED = auto()
 
 
-class User(Base):
+class User(CreatedAtMixin, CreatedByMixin, Base):
     __tablename__ = "auth_users"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    email: Mapped[str | None] = mapped_column(String(255), unique=True)
-    password_hash: Mapped[str | None] = mapped_column(String(255))
+    id: Mapped[int_pk]
+    email: Mapped[str255 | None] = mapped_column(unique=True)
+    password_hash: Mapped[str255 | None]
     status: Mapped[UserStatus] = mapped_column(
-        Enum(UserStatus, name="auth_user_status_enum"),
+        SQLEnum(UserStatus, name="auth_user_status_enum"),
         default=UserStatus.ACTIVE,
     )
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole, name="auth_user_role_enum"),
+        SQLEnum(UserRole, name="auth_user_role_enum"),
         default=UserRole.CUSTOMER,
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
-
     booster_profile: Mapped[BoosterProfile | None] = relationship(
         back_populates="user",
         uselist=False,
     )
 
 
-class BoosterProfile(Base):
+class BoosterProfile(CreateUpdateMixin, Base):
     __tablename__ = "auth_booster_profiles"
 
     user_id: Mapped[int] = mapped_column(
@@ -68,38 +68,24 @@ class BoosterProfile(Base):
         primary_key=True,
     )
     approval_status: Mapped[BoosterApprovalStatus] = mapped_column(
-        Enum(
+        SQLEnum(
             BoosterApprovalStatus,
             name="auth_booster_profile_approval_status_enum",
         ),
         default=BoosterApprovalStatus.DRAFT,
     )
     tier: Mapped[BoosterTier] = mapped_column(
-        Enum(BoosterTier, name="auth_booster_profile_tier_enum"),
+        SQLEnum(BoosterTier, name="auth_booster_profile_tier_enum"),
         default=BoosterTier.BOOSTER,
     )
-    discord_url: Mapped[str | None] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
+    discord_url: Mapped[str255 | None]
     user: Mapped[User] = relationship(back_populates="booster_profile")
 
 
-class AdminNote(Base):
+class AdminNote(CreatedAtMixin, CreatedByMixin, Base):
     __tablename__ = "auth_admin_notes"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int_pk]
     target_user_id: Mapped[int] = mapped_column(ForeignKey("auth_users.id"))
     author_admin_id: Mapped[int] = mapped_column(ForeignKey("auth_users.id"))
     note: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )

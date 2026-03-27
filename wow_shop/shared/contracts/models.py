@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Self, Generic, TypeVar
+from typing import Any, Generic, Self, TypeVar
 from collections.abc import Sequence
 
 from pydantic import BaseModel, ConfigDict
 
 T = TypeVar("T")
-ItemT = TypeVar("ItemT")
-MetaT = TypeVar("MetaT")
 
 
 class ResponseStatus(str, Enum):
@@ -46,23 +44,32 @@ class BaseHttpResponseModel(ORJsonModel, Generic[T]):
     status: str = ResponseStatus.SUCCESS.value
 
 
-class ListResponseItems(BaseResponseDataModel, Generic[ItemT]):
-    items: list[ItemT]
-
-    @classmethod
-    def from_items(cls, items: Sequence[ItemT]) -> "ListResponseItems[ItemT]":
-        return cls.build(items=list(items))
+ItemDataType = TypeVar("ItemDataType", bound=BaseResponseDataModel)
+MetaDataType = TypeVar("MetaDataType", bound=BaseResponseDataModel)
 
 
-class ListResponseData(BaseResponseDataModel, Generic[ItemT, MetaT]):
-    items: list[ItemT]
-    meta: MetaT
+class ListResponses(
+    BaseResponseDataModel,
+    Generic[ItemDataType, MetaDataType],
+):
+    items: list[ItemDataType]
+    meta: MetaDataType | None = None
 
     @classmethod
     def with_meta(
         cls,
-        *,
-        items: Sequence[ItemT],
-        meta: MetaT,
-    ) -> "ListResponseData[ItemT, MetaT]":
-        return cls.build(items=list(items), meta=meta)
+        items: Sequence[ItemDataType],
+        meta: MetaDataType | None = None,
+    ) -> "ListResponses[ItemDataType, MetaDataType]":
+        return cls(items=list(items), meta=meta)
+
+
+class ListResponsesOnce(BaseResponseDataModel, Generic[ItemDataType]):
+    items: list[ItemDataType]
+
+    @classmethod
+    def from_items(
+        cls,
+        items: Sequence[ItemDataType],
+    ) -> "ListResponsesOnce[ItemDataType]":
+        return cls(items=list(items))

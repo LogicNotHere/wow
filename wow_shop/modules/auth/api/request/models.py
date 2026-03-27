@@ -1,23 +1,26 @@
 from __future__ import annotations
 
-from pydantic import Field
-
+from wow_shop.modules.auth.api.request.types import (
+    NonEmptyStr,
+    NonEmptyStrippedStr,
+    PasswordStr,
+)
 from wow_shop.shared.contracts import BaseRequestModel
 
 
 class RegisterRequest(BaseRequestModel):
-    email: str
-    password: str = Field(min_length=8)
+    email: NonEmptyStrippedStr
+    password: PasswordStr
 
 
 class LoginRequest(BaseRequestModel):
-    email: str
-    password: str
+    email: NonEmptyStrippedStr
+    password: NonEmptyStr
 
 
 class RefreshRequest(BaseRequestModel):
-    refresh_token: str
+    refresh_token: NonEmptyStrippedStr
 
 
 class LogoutRequest(BaseRequestModel):
-    refresh_token: str
+    refresh_token: NonEmptyStrippedStr

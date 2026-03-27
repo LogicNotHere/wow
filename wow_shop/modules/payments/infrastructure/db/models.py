@@ -1,40 +1,40 @@
 from __future__ import annotations
 
-from enum import Enum as PyEnum
+from enum import StrEnum, auto
 from datetime import datetime
 
 from sqlalchemy import (
-    Enum,
+    Enum as SQLEnum,
     Text,
     Float,
-    Integer,
     DateTime,
     ForeignKey,
     CheckConstraint,
-    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from wow_shop.infrastructure.db.base import Base
+from wow_shop.infrastructure.db.mixins import CreatedAtMixin, CreatedByMixin
+from wow_shop.infrastructure.db.types import int_pk
 
 
-class PaymentStatus(str, PyEnum):
-    CONFIRMED = "confirmed"
-    CANCELED = "canceled"
+class PaymentStatus(StrEnum):
+    CONFIRMED = auto()
+    CANCELED = auto()
 
 
-class RefundType(str, PyEnum):
-    FULL = "full"
-    PARTIAL = "partial"
+class RefundType(StrEnum):
+    FULL = auto()
+    PARTIAL = auto()
 
 
-class Payment(Base):
+class Payment(CreatedAtMixin, CreatedByMixin, Base):
     __tablename__ = "payments_payments"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int_pk]
     order_id: Mapped[int] = mapped_column(ForeignKey("orders_orders.id"))
     status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus, name="payments_payment_status_enum"),
+        SQLEnum(PaymentStatus, name="payments_payment_status_enum"),
         default=PaymentStatus.CONFIRMED,
     )
     confirmed_at: Mapped[datetime | None] = mapped_column(
@@ -43,13 +43,9 @@ class Payment(Base):
     confirmed_by_admin_id: Mapped[int | None] = mapped_column(
         ForeignKey("auth_users.id")
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
 
 
-class Refund(Base):
+class Refund(CreatedAtMixin, CreatedByMixin, Base):
     __tablename__ = "payments_refunds"
     __table_args__ = (
         CheckConstraint(
@@ -57,17 +53,13 @@ class Refund(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int_pk]
     order_id: Mapped[int] = mapped_column(ForeignKey("orders_orders.id"))
     type: Mapped[RefundType] = mapped_column(
-        Enum(RefundType, name="payments_refund_type_enum")
+        SQLEnum(RefundType, name="payments_refund_type_enum")
     )
     amount_eur: Mapped[float | None] = mapped_column(Float)
     reason: Mapped[str | None] = mapped_column(Text)
     decided_by_admin_id: Mapped[int] = mapped_column(
         ForeignKey("auth_users.id")
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
     )
