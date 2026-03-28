@@ -11,8 +11,9 @@
 - Backoffice-доступ хранится в `User.staff_role`.
 - Бустер определяется не ролью, а наличием `BoosterProfile`.
 - `BoosterProfile.user_id` — одновременно `PK` и `FK -> users.id`, то есть это расширение `User` в связи `1:0..1`.
+- Каталог иерархический: `Game -> ServiceCategory (tree) -> ServiceLot`.
 - Прайс на MVP считается от `ServiceLot.base_price_eur` и выбранных `ServiceOption`.
-- `PricingRuleSet` оставлен в [models.py](/Users/vitalii/Projects/WowShop/models.py#L267) закомментированным как future-вариант.
+- `PricingRuleSet` пока не активирован в текущем ORM, оставлен как future-вариант в доменной документации.
 
 ## Pricing MVP
 
@@ -67,6 +68,7 @@ erDiagram
     USER ||--o{ CHAT_PARTICIPANT : joins
     USER ||--o{ CHAT_MESSAGE : writes
 
+    GAME ||--o{ SERVICE_CATEGORY : contains
     SERVICE_CATEGORY ||--o{ SERVICE_CATEGORY : parent_of
     SERVICE_CATEGORY ||--o{ SERVICE_LOT : contains
     SERVICE_LOT ||--o{ SERVICE_OPTION : has
@@ -110,8 +112,17 @@ erDiagram
         datetime created_at
     }
 
+    GAME {
+        int id PK
+        string name
+        string slug
+        bool is_active
+        int sort_order
+    }
+
     SERVICE_CATEGORY {
         int id PK
+        int game_id FK
         string name
         string slug
         int parent_id FK
@@ -123,6 +134,7 @@ erDiagram
         int id PK
         int category_id FK
         string name
+        string slug
         text description
         bool is_active
         float base_price_eur
@@ -308,14 +320,24 @@ erDiagram
 
 ```mermaid
 erDiagram
+    GAME ||--o{ SERVICE_CATEGORY : contains
     SERVICE_CATEGORY ||--o{ SERVICE_CATEGORY : parent_of
     SERVICE_CATEGORY ||--o{ SERVICE_LOT : contains
     SERVICE_LOT ||--o{ SERVICE_OPTION : has
     SERVICE_LOT ||--o| SERVICE_PAGE : has
     SERVICE_PAGE ||--o{ SERVICE_PAGE_BLOCK : contains
 
+    GAME {
+        int id PK
+        string name
+        string slug
+        bool is_active
+        int sort_order
+    }
+
     SERVICE_CATEGORY {
         int id PK
+        int game_id FK
         string name
         string slug
         int parent_id FK
@@ -327,6 +349,7 @@ erDiagram
         int id PK
         int category_id FK
         string name
+        string slug
         text description
         bool is_active
         float base_price_eur
@@ -511,6 +534,6 @@ erDiagram
 
 ## Что не активно сейчас
 
-- `PricingRuleSet` — отключён, оставлен только как закомментированная модель
+- `PricingRuleSet` — пока не активирован в текущем ORM (future-вариант)
 - `PageBlockTypeSchema` — отключён
 - `Dispute`, `OrderTimelineEvent`, notification-модели — пока не активированы в `models.py`
