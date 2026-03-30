@@ -12,7 +12,7 @@
 - Бустер определяется не ролью, а наличием `BoosterProfile`.
 - `BoosterProfile.user_id` — одновременно `PK` и `FK -> users.id`, то есть это расширение `User` в связи `1:0..1`.
 - Каталог иерархический: `Game -> ServiceCategory (tree) -> ServiceLot`.
-- Прайс на MVP считается от `ServiceLot.base_price_eur` и выбранных `ServiceOption`.
+- Прайс на MVP считается от `ServiceLot.base_price_eur` и выбранных `ServiceOptionBlock`.
 - `PricingRuleSet` пока не активирован в текущем ORM, оставлен как future-вариант в доменной документации.
 
 ## Pricing MVP
@@ -20,20 +20,21 @@
 Сейчас pricing устроен так:
 
 - у лота есть базовая цена `base_price_eur`
-- у опций есть конфиг и ценовой эффект в `config_json`
+- у блоков опций есть UI-конфиг в `config_json` и ценовой эффект в `pricing_json`
 - итоговая цена заказа считается на backend
 - результат расчета фиксируется в `Order.price_snapshot_json`
 
 Упрощенная формула:
 
 ```text
-final_price = service_lot.base_price_eur + sum(selected option price deltas)
+final_price = service_lot.base_price_eur + sum(selected option block price deltas)
 ```
 
-Примеры того, что может лежать в `ServiceOption.config_json`:
+Примеры того, что может лежать в `ServiceOptionBlock.config_json`:
 
 ```json
 {
+  "type": "select",
   "choices": [
     { "value": "self_play", "label": "Self Play", "price_delta": 0 },
     { "value": "piloted", "label": "Piloted", "price_delta": 15 }
@@ -43,9 +44,20 @@ final_price = service_lot.base_price_eur + sum(selected option price deltas)
 
 ```json
 {
-  "type": "boolean",
+  "type": "checkbox",
+  "label": "Stream run",
+  "default": false
+}
+```
+
+Пример `ServiceOptionBlock.pricing_json`:
+
+```json
+{
+  "pricing_mode": "delta",
   "true_price_delta": 8,
-  "false_price_delta": 0
+  "false_price_delta": 0,
+  "currency": "EUR"
 }
 ```
 
@@ -71,7 +83,8 @@ erDiagram
     GAME ||--o{ SERVICE_CATEGORY : contains
     SERVICE_CATEGORY ||--o{ SERVICE_CATEGORY : parent_of
     SERVICE_CATEGORY ||--o{ SERVICE_LOT : contains
-    SERVICE_LOT ||--o{ SERVICE_OPTION : has
+    SERVICE_LOT ||--o| SERVICE_OPTION : has
+    SERVICE_OPTION ||--o{ SERVICE_OPTION_BLOCK : contains
     SERVICE_LOT ||--o| SERVICE_PAGE : has
     SERVICE_PAGE ||--o{ SERVICE_PAGE_BLOCK : contains
     SERVICE_LOT ||--o{ ORDER : ordered_as
@@ -145,11 +158,27 @@ erDiagram
     SERVICE_OPTION {
         int id PK
         int lot_id FK
+        string title
         string code
-        string value_type
-        json config_json
-        bool is_required
         int sort_order
+        bool is_required
+        datetime created_at
+        int created_by_user_id FK
+        datetime updated_at
+        int updated_by_user_id FK
+    }
+
+    SERVICE_OPTION_BLOCK {
+        int id PK
+        int option_id FK
+        int position
+        enum type
+        json config_json
+        json pricing_json
+        datetime created_at
+        int created_by_user_id FK
+        datetime updated_at
+        int updated_by_user_id FK
     }
 
     SERVICE_PAGE {
@@ -323,7 +352,8 @@ erDiagram
     GAME ||--o{ SERVICE_CATEGORY : contains
     SERVICE_CATEGORY ||--o{ SERVICE_CATEGORY : parent_of
     SERVICE_CATEGORY ||--o{ SERVICE_LOT : contains
-    SERVICE_LOT ||--o{ SERVICE_OPTION : has
+    SERVICE_LOT ||--o| SERVICE_OPTION : has
+    SERVICE_OPTION ||--o{ SERVICE_OPTION_BLOCK : contains
     SERVICE_LOT ||--o| SERVICE_PAGE : has
     SERVICE_PAGE ||--o{ SERVICE_PAGE_BLOCK : contains
 
@@ -360,11 +390,27 @@ erDiagram
     SERVICE_OPTION {
         int id PK
         int lot_id FK
+        string title
         string code
-        string value_type
-        json config_json
-        bool is_required
         int sort_order
+        bool is_required
+        datetime created_at
+        int created_by_user_id FK
+        datetime updated_at
+        int updated_by_user_id FK
+    }
+
+    SERVICE_OPTION_BLOCK {
+        int id PK
+        int option_id FK
+        int position
+        enum type
+        json config_json
+        json pricing_json
+        datetime created_at
+        int created_by_user_id FK
+        datetime updated_at
+        int updated_by_user_id FK
     }
 
     SERVICE_PAGE {
