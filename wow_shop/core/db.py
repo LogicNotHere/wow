@@ -11,13 +11,3 @@ from wow_shop.infrastructure.db.session import (
 def get_database_url() -> str:
     settings = get_settings()
     return settings.db.url
-
-
-__all__ = [
-    "close_dbs",
-    "handle_session",
-    "get_async_session_factory",
-    "get_engine",
-    "get_database_url",
-    "s",
-]

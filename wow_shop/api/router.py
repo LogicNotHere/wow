@@ -19,7 +19,10 @@ from wow_shop.api.dependencies.permissions import (
 
 auth_public_router = APIRouter(
     responses=COMMON_RESPONSES,
-    dependencies=[Depends(handle_session)],
+    dependencies=[
+        Depends(handle_session),
+        Depends(get_current_user),
+    ],
 )
 booster_router = APIRouter(
     responses=COMMON_RESPONSES,

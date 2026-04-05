@@ -12,14 +12,3 @@ from wow_shop.modules.auth.application.auth_service import (
     refresh_tokens,
     register_user,
 )
-
-__all__ = [
-    "AuthError",
-    "AuthValidationError",
-    "InvalidCredentialsError",
-    "UserAlreadyExistsError",
-    "login_user",
-    "logout",
-    "refresh_tokens",
-    "register_user",
-]

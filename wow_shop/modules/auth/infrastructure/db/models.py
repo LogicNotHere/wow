@@ -57,6 +57,7 @@ class User(CreatedAtMixin, CreatedByMixin, Base):
     booster_profile: Mapped[BoosterProfile | None] = relationship(
         back_populates="user",
         uselist=False,
+        foreign_keys="BoosterProfile.user_id",
     )
 
 
@@ -79,7 +80,10 @@ class BoosterProfile(CreateUpdateMixin, Base):
         default=BoosterTier.BOOSTER,
     )
     discord_url: Mapped[str255 | None]
-    user: Mapped[User] = relationship(back_populates="booster_profile")
+    user: Mapped[User] = relationship(
+        back_populates="booster_profile",
+        foreign_keys=[user_id],
+    )
 
 
 class AdminNote(CreatedAtMixin, CreatedByMixin, Base):

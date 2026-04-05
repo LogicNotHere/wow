@@ -25,6 +25,15 @@ from wow_shop.modules.catalog.application.errors import (
     CategoryAlreadyExistsError,
     GameAlreadyExistsError,
     GameNotFoundError,
+    CategoryNotFoundError,
+    LotNotFoundError,
+    LotAlreadyExistsError,
+    LotOptionAlreadyExistsError,
+    LotPageNotFoundError,
+    LotPageBlockNotFoundError,
+    LotOptionNotFoundError,
+    LotOptionValueNotFoundError,
+    LotOptionValueAlreadyExistsError,
 )
 from wow_shop.infrastructure.security.token_errors import (
     TokenExpiredError,
@@ -53,13 +62,34 @@ def _map_application_error(exc: ApplicationError) -> ApiException:
     ):
         return UnauthorizedApiException(str(exc))
 
-    if isinstance(exc, (ParentCategoryNotFoundError, GameNotFoundError)):
+    if isinstance(
+        exc,
+        (
+            ParentCategoryNotFoundError,
+            GameNotFoundError,
+            CategoryNotFoundError,
+            LotNotFoundError,
+            LotPageNotFoundError,
+            LotPageBlockNotFoundError,
+            LotOptionNotFoundError,
+            LotOptionValueNotFoundError,
+        ),
+    ):
         return NotFoundApiException(str(exc))
 
     if isinstance(exc, (UserAlreadyExistsError, RefreshTokenConflictError)):
         return ConflictApiException(str(exc))
 
-    if isinstance(exc, (CategoryAlreadyExistsError, GameAlreadyExistsError)):
+    if isinstance(
+        exc,
+        (
+            CategoryAlreadyExistsError,
+            GameAlreadyExistsError,
+            LotAlreadyExistsError,
+            LotOptionAlreadyExistsError,
+            LotOptionValueAlreadyExistsError,
+        ),
+    ):
         return ConflictApiException(str(exc))
 
     return InternalApiException()

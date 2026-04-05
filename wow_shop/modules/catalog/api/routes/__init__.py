@@ -22,14 +22,3 @@ staff_router = APIRouter()
 staff_router.include_router(games_staff_router)
 staff_router.include_router(categories_staff_router)
 staff_router.include_router(lots_staff_router)
-
-__all__ = [
-    "categories_public_router",
-    "categories_staff_router",
-    "games_public_router",
-    "games_staff_router",
-    "lots_public_router",
-    "lots_staff_router",
-    "public_router",
-    "staff_router",
-]

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Self
 
 from wow_shop.shared.contracts import BaseResponseDataModel
-from wow_shop.modules.catalog.infrastructure.db.models import Game
+from wow_shop.modules.catalog.infrastructure.db.models import Game, GameStatus
 
 
 class GameCreatedResponse(BaseResponseDataModel):
@@ -18,7 +18,7 @@ class GameListItemResponse(BaseResponseDataModel):
     id: int
     name: str
     slug: str
-    is_active: bool
+    status: GameStatus
     sort_order: int
 
     @classmethod
@@ -27,6 +27,24 @@ class GameListItemResponse(BaseResponseDataModel):
             id=game.id,
             name=game.name,
             slug=game.slug,
-            is_active=game.is_active,
+            status=game.status,
+            sort_order=game.sort_order,
+        )
+
+
+class GameDetailResponse(BaseResponseDataModel):
+    id: int
+    name: str
+    slug: str
+    status: GameStatus
+    sort_order: int
+
+    @classmethod
+    def build(cls, game: Game) -> Self:
+        return cls(
+            id=game.id,
+            name=game.name,
+            slug=game.slug,
+            status=game.status,
             sort_order=game.sort_order,
         )

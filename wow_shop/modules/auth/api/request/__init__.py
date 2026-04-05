@@ -4,10 +4,3 @@ from wow_shop.modules.auth.api.request.models import (
     RefreshRequest,
     RegisterRequest,
 )
-
-__all__ = [
-    "LoginRequest",
-    "LogoutRequest",
-    "RefreshRequest",
-    "RegisterRequest",
-]

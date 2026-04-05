@@ -7,6 +7,7 @@ from sqlalchemy import (
     JSON,
     Index,
     Enum as SQLEnum,
+    ForeignKey,
     Text,
     Float,
     Boolean,
@@ -24,6 +25,8 @@ from wow_shop.modules.catalog.infrastructure.db.types import (
     category_parent_fk,
     game_fk,
     lot_fk,
+    option_fk,
+    option_value_fk,
     page_fk,
 )
 
@@ -33,13 +36,47 @@ class ServicePageStatus(StrEnum):
     PUBLISHED = auto()
 
 
+class LotOptionInputType(StrEnum):
+    CHECKBOX = auto()
+    RADIO = auto()
+    SELECT = auto()
+    MULTISELECT = auto()
+
+
+class ServiceLotStatus(StrEnum):
+    DRAFT = auto()
+    ACTIVE = auto()
+    INACTIVE = auto()
+    DELETED = auto()
+
+
+class GameStatus(StrEnum):
+    DRAFT = auto()
+    ACTIVE = auto()
+    INACTIVE = auto()
+    DELETED = auto()
+
+
+class ServiceCategoryStatus(StrEnum):
+    DRAFT = auto()
+    ACTIVE = auto()
+    INACTIVE = auto()
+    DELETED = auto()
+
+
 class Game(Base):
     __tablename__ = "catalog_games"
 
     id: Mapped[int_pk]
     name: Mapped[str255]
     slug: Mapped[str255] = mapped_column(unique=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    status: Mapped[GameStatus] = mapped_column(
+        SQLEnum(GameStatus, name="catalog_game_status_enum"),
+        default=GameStatus.DRAFT,
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     sort_order: Mapped[int] = mapped_column(default=0)
 
     categories: Mapped[list[ServiceCategory]] = relationship(
@@ -65,43 +102,94 @@ class ServiceCategory(Base):
     name: Mapped[str255]
     slug: Mapped[str255]
     parent_id: Mapped[category_parent_fk | None]
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    status: Mapped[ServiceCategoryStatus] = mapped_column(
+        SQLEnum(
+            ServiceCategoryStatus,
+            name="catalog_service_category_status_enum",
+        ),
+        default=ServiceCategoryStatus.DRAFT,
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     sort_order: Mapped[int] = mapped_column(default=0)
 
     game: Mapped[Game] = relationship(back_populates="categories")
-    parent: Mapped[ServiceCategory | None] = relationship(remote_side=[id])
+    parent: Mapped[ServiceCategory | None] = relationship(
+        remote_side="ServiceCategory.id"
+    )
     lots: Mapped[list[ServiceLot]] = relationship(back_populates="category")
 
 
 class ServiceLot(CreateUpdateMixin, Base):
     __tablename__ = "catalog_service_lots"
+    __table_args__ = (UniqueConstraint("category_id", "slug"),)
 
     id: Mapped[int_pk]
     category_id: Mapped[category_fk]
     name: Mapped[str255]
+    slug: Mapped[str255]
     description: Mapped[str | None] = mapped_column(Text)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    status: Mapped[ServiceLotStatus] = mapped_column(
+        SQLEnum(ServiceLotStatus, name="catalog_service_lot_status_enum"),
+        default=ServiceLotStatus.DRAFT,
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     base_price_eur: Mapped[float] = mapped_column(Float, default=0)
     category: Mapped[ServiceCategory] = relationship(back_populates="lots")
-    options: Mapped[list[ServiceOption]] = relationship(back_populates="lot")
+    options: Mapped[list[LotOption]] = relationship(
+        back_populates="lot",
+        cascade="all, delete-orphan",
+    )
     page: Mapped[ServicePage | None] = relationship(
         back_populates="lot",
         uselist=False,
     )
 
 
-class ServiceOption(Base):
-    __tablename__ = "catalog_service_options"
+class LotOption(CreateUpdateMixin, Base):
+    __tablename__ = "catalog_lot_options"
+    __table_args__ = (UniqueConstraint("lot_id", "code"),)
 
     id: Mapped[int_pk]
     lot_id: Mapped[lot_fk]
+    label: Mapped[str255]
     code: Mapped[str100]
-    value_type: Mapped[str50]
-    config_json: Mapped[dict | None] = mapped_column(JSON)
+    input_type: Mapped[LotOptionInputType] = mapped_column(
+        SQLEnum(LotOptionInputType, name="catalog_lot_option_input_type_enum"),
+    )
     is_required: Mapped[bool] = mapped_column(Boolean, default=False)
     sort_order: Mapped[int] = mapped_column(default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    depends_on_option_id: Mapped[int | None] = mapped_column(
+        ForeignKey("catalog_lot_options.id")
+    )
+    depends_on_value_id: Mapped[option_value_fk | None]
 
     lot: Mapped[ServiceLot] = relationship(back_populates="options")
+    values: Mapped[list[LotOptionValue]] = relationship(
+        back_populates="option",
+        cascade="all, delete-orphan",
+    )
+
+
+class LotOptionValue(CreateUpdateMixin, Base):
+    __tablename__ = "catalog_lot_option_values"
+    __table_args__ = (UniqueConstraint("option_id", "code"),)
+
+    id: Mapped[int_pk]
+    option_id: Mapped[option_fk]
+    label: Mapped[str255]
+    code: Mapped[str100]
+    description: Mapped[str | None] = mapped_column(Text)
+    price_value: Mapped[float] = mapped_column(Float, default=0)
+    sort_order: Mapped[int] = mapped_column(default=0)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    option: Mapped[LotOption] = relationship(back_populates="values")
 
 
 class ServicePage(CreateUpdateMixin, Base):

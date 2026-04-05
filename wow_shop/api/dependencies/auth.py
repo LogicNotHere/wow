@@ -11,9 +11,13 @@ from wow_shop.infrastructure.security.token_payloads import AccessPayload
 from wow_shop.shared.auth.context import CurrentUser, set_auth_user
 
 
-def get_current_user(
-    payload: Annotated[AccessPayload, Depends(get_access_payload)],
-) -> CurrentUser:
+async def get_current_user(
+    payload: Annotated[AccessPayload | None, Depends(get_access_payload)],
+) -> CurrentUser | None:
+    if payload is None:
+        set_auth_user(None)
+        return None
+
     try:
         current_user = CurrentUser(
             user_id=payload.user_id,

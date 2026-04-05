@@ -22,7 +22,7 @@ class RoleAccessValidator:
         self._unauthenticated_detail = unauthenticated_detail
         self._invalid_role_detail = invalid_role_detail
 
-    def __call__(self) -> CurrentUser:
+    async def __call__(self) -> CurrentUser:
         current_user = get_auth_user()
         if current_user is None:
             raise HTTPException(
@@ -64,3 +64,32 @@ require_booster_access = require_roles(
     UserRole.BOOSTER,
     detail="Booster access required.",
 )
+
+
+CATALOG_STAFF_ROLES = (
+    UserRole.ADMIN,
+    UserRole.MANAGER,
+    UserRole.OPERATOR,
+    UserRole.CONTENT_MANAGER,
+)
+
+require_catalog_deleted_view_access = require_roles(
+    *CATALOG_STAFF_ROLES,
+    detail="Not enough permissions.",
+)
+require_catalog_soft_delete_access = require_roles(
+    *CATALOG_STAFF_ROLES,
+    detail="Not enough permissions.",
+)
+require_catalog_restore_access = require_roles(
+    *CATALOG_STAFF_ROLES,
+    detail="Not enough permissions.",
+)
+
+
+def ensure_catalog_deleted_view_access(role: UserRole | None) -> None:
+    if role not in CATALOG_STAFF_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions.",
+        )

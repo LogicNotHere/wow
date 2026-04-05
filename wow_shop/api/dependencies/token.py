@@ -6,7 +6,6 @@ from fastapi import Header, Depends
 
 from wow_shop.infrastructure.security.token_errors import (
     TokenInvalidError,
-    TokenMissingError,
 )
 from wow_shop.infrastructure.security.token_service import (
     TokenService,
@@ -17,9 +16,9 @@ from wow_shop.infrastructure.security.token_payloads import AccessPayload
 
 def get_bearer_token(
     authorization: Annotated[str | None, Header()] = None,
-) -> str:
+) -> str | None:
     if authorization is None:
-        raise TokenMissingError("Authorization header is required.")
+        return None
 
     scheme, _, token = authorization.partition(" ")
     if scheme.lower() != "bearer" or not token:
@@ -28,7 +27,9 @@ def get_bearer_token(
 
 
 def get_access_payload(
-    token: Annotated[str, Depends(get_bearer_token)],
+    token: Annotated[str | None, Depends(get_bearer_token)],
     token_service: Annotated[TokenService, Depends(get_token_service)],
-) -> AccessPayload:
+) -> AccessPayload | None:
+    if token is None:
+        return None
     return token_service.parse_access_token(token)

@@ -58,6 +58,7 @@ class ListResponses(
     @classmethod
     def with_meta(
         cls,
+        *,
         items: Sequence[ItemDataType],
         meta: MetaDataType | None = None,
     ) -> "ListResponses[ItemDataType, MetaDataType]":
@@ -70,6 +71,7 @@ class ListResponsesOnce(BaseResponseDataModel, Generic[ItemDataType]):
     @classmethod
     def from_items(
         cls,
+        *,
         items: Sequence[ItemDataType],
     ) -> "ListResponsesOnce[ItemDataType]":
         return cls(items=list(items))

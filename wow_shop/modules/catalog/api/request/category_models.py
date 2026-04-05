@@ -5,6 +5,11 @@ from typing import Annotated
 from pydantic import Field, StringConstraints
 
 from wow_shop.shared.contracts import BaseRequestModel
+from wow_shop.shared.pydantic import PartialModel
+from wow_shop.shared.types import IntId
+from wow_shop.modules.catalog.infrastructure.db.models import (
+    ServiceCategoryStatus,
+)
 
 CategoryName = Annotated[
     str,
@@ -25,9 +30,22 @@ CategorySlug = Annotated[
 
 
 class CreateCategoryRequest(BaseRequestModel):
-    game_id: int = Field(ge=1)
+    game_id: IntId
     name: CategoryName
     slug: CategorySlug
-    parent_id: int | None = Field(default=None, ge=1)
-    is_active: bool = True
-    sort_order: int = 0
+    parent_id: IntId | None = None
+    status: ServiceCategoryStatus = ServiceCategoryStatus.DRAFT
+    sort_order: int = Field(default=0, ge=0)
+
+
+class CategoryPatchFieldsRequest(BaseRequestModel):
+    name: CategoryName
+    slug: CategorySlug
+    parent_id: IntId | None = None
+    status: ServiceCategoryStatus
+    sort_order: int = Field(ge=0)
+
+
+@PartialModel()
+class PatchCategoryRequest(CategoryPatchFieldsRequest):
+    pass

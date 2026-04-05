@@ -10,12 +10,3 @@ from wow_shop.modules.auth.api.request import (
 from wow_shop.modules.auth.api.response import (
     TokenPairResponse,
 )
-
-__all__ = [
-    "LoginRequest",
-    "LogoutRequest",
-    "RefreshRequest",
-    "RegisterRequest",
-    "TokenPairResponse",
-    "public_router",
-]

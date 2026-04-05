@@ -25,5 +25,3 @@ from wow_shop.modules.notifications.infrastructure.db import (  # noqa: F401
 )
 
 metadata = Base.metadata
-
-__all__ = ["metadata"]

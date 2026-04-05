@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends, FastAPI
 
 from wow_shop.api.router import admin_router, booster_router, auth_public_router
+from wow_shop.api.dev_routes import dev_router
 from wow_shop.core.config_loader import Config, init_config
 from wow_shop.api.dependencies.app import log_request, handle_request_id
 from wow_shop.api.exception_handlers import register_exception_handlers
@@ -44,6 +45,8 @@ register_exception_handlers(app)
 app.include_router(auth_public_router, prefix="/api/v1")
 app.include_router(booster_router, prefix="/api/v1/booster")
 app.include_router(admin_router, prefix="/api/v1/admin")
+if Config.c.app.debug:
+    app.include_router(dev_router)
 
 
 @app.get("/health", tags=["system"])

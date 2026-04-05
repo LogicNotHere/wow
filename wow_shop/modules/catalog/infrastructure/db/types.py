@@ -12,3 +12,9 @@ category_parent_fk = Annotated[
 ]
 lot_fk = Annotated[int, mapped_column(ForeignKey("catalog_service_lots.id"))]
 page_fk = Annotated[int, mapped_column(ForeignKey("catalog_service_pages.id"))]
+option_fk = Annotated[
+    int, mapped_column(ForeignKey("catalog_lot_options.id"))
+]
+option_value_fk = Annotated[
+    int, mapped_column(ForeignKey("catalog_lot_option_values.id"))
+]
