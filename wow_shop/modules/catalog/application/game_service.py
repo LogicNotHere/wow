@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import NamedTuple
 
 from sqlalchemy import select
@@ -22,6 +21,7 @@ from wow_shop.modules.catalog.infrastructure.db.models import (
     GameStatus,
 )
 from wow_shop.shared.utils.missing import Missing, MissingType
+from wow_shop.shared.utils.time import now_utc
 
 
 def _normalize_name(name: str) -> str:
@@ -205,7 +205,7 @@ def edit_game_bl(
 
     if game.status == GameStatus.DELETED:
         if game.deleted_at is None:
-            game.deleted_at = datetime.now(timezone.utc)
+            game.deleted_at = now_utc()
     else:
         game.deleted_at = None
 
@@ -248,7 +248,7 @@ async def soft_delete_game(
         game.status = GameStatus.DELETED
         update_required = True
     if game.deleted_at is None:
-        game.deleted_at = datetime.now(timezone.utc)
+        game.deleted_at = now_utc()
         update_required = True
 
     if update_required:

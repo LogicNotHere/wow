@@ -35,6 +35,15 @@ from wow_shop.modules.catalog.application.errors import (
     LotOptionValueNotFoundError,
     LotOptionValueAlreadyExistsError,
 )
+from wow_shop.modules.pricing.application.errors import (
+    PromotionAssignmentAlreadyExistsError,
+    PromotionAssignmentNotFoundError,
+    PromotionNotFoundError,
+    PromotionValidationError,
+    PromotionLotNotFoundError,
+    PromotionCategoryNotFoundError,
+    PromotionTargetUserNotFoundError,
+)
 from wow_shop.infrastructure.security.token_errors import (
     TokenExpiredError,
     TokenInvalidError,
@@ -47,7 +56,14 @@ log = logging.getLogger(__name__)
 
 
 def _map_application_error(exc: ApplicationError) -> ApiException:
-    if isinstance(exc, (AuthValidationError, CatalogValidationError)):
+    if isinstance(
+        exc,
+        (
+            AuthValidationError,
+            CatalogValidationError,
+            PromotionValidationError,
+        ),
+    ):
         return BadRequestApiException(str(exc))
 
     if isinstance(
@@ -73,6 +89,11 @@ def _map_application_error(exc: ApplicationError) -> ApiException:
             LotPageBlockNotFoundError,
             LotOptionNotFoundError,
             LotOptionValueNotFoundError,
+            PromotionNotFoundError,
+            PromotionLotNotFoundError,
+            PromotionCategoryNotFoundError,
+            PromotionTargetUserNotFoundError,
+            PromotionAssignmentNotFoundError,
         ),
     ):
         return NotFoundApiException(str(exc))
@@ -88,6 +109,7 @@ def _map_application_error(exc: ApplicationError) -> ApiException:
             LotAlreadyExistsError,
             LotOptionAlreadyExistsError,
             LotOptionValueAlreadyExistsError,
+            PromotionAssignmentAlreadyExistsError,
         ),
     ):
         return ConflictApiException(str(exc))

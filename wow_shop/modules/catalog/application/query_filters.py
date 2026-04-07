@@ -43,6 +43,16 @@ class SearchILikeFilter:
         )
 
 
+@dataclass(slots=True)
+class ClauseFilter:
+    clause: Any | None
+
+    def apply(self, query: Select[Any]) -> Select[Any]:
+        if self.clause is None:
+            return query
+        return query.where(self.clause)
+
+
 def apply_filters(
     query: Select[Any],
     filters: Sequence[ApplicableFilter],

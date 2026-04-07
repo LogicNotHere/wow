@@ -89,9 +89,14 @@ tasks:
       - '{{.API_EXEC}} sh'
 
   test:
-    desc: Placeholder for tests inside api container
+    desc: Run pytest inside api container
     cmds:
-      - '{{.API_EXEC}} sh -c "echo TODO add test command (pytest or equivalent)"'
+      - '{{.API_EXEC}} pytest -q'
+
+  test_regression_catalog_promotions:
+    desc: Run fast regression pack for catalog + promotions before Order work
+    cmds:
+      - '{{.API_EXEC}} pytest -q -m regression_catalog_promotions tests/api'
       
 #Alembic
   migrate:

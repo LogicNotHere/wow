@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import uuid4
 from typing import Any
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 from functools import lru_cache
 
 import jwt
@@ -14,10 +14,7 @@ from wow_shop.infrastructure.security.token_errors import (
     TokenMissingError,
 )
 from wow_shop.infrastructure.security.token_payloads import TokenType
-
-
-def _now_utc() -> datetime:
-    return datetime.now(tz=timezone.utc)
+from wow_shop.shared.utils.time import now_utc
 
 
 class JwtManager:
@@ -83,7 +80,7 @@ class JwtManager:
         if user_id <= 0:
             raise TokenInvalidError("User id must be positive.")
 
-        issued_at = _now_utc()
+        issued_at = now_utc()
         expires_at = issued_at + expires_delta
         return {
             "sub": str(user_id),

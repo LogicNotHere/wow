@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import StrEnum, auto
 from datetime import datetime
 
@@ -9,7 +10,7 @@ from sqlalchemy import (
     Enum as SQLEnum,
     ForeignKey,
     Text,
-    Float,
+    Numeric,
     Boolean,
     DateTime,
     UniqueConstraint,
@@ -137,7 +138,10 @@ class ServiceLot(CreateUpdateMixin, Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True)
     )
-    base_price_eur: Mapped[float] = mapped_column(Float, default=0)
+    base_price_eur: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        default=Decimal("0"),
+    )
     category: Mapped[ServiceCategory] = relationship(back_populates="lots")
     options: Mapped[list[LotOption]] = relationship(
         back_populates="lot",
@@ -172,6 +176,7 @@ class LotOption(CreateUpdateMixin, Base):
     values: Mapped[list[LotOptionValue]] = relationship(
         back_populates="option",
         cascade="all, delete-orphan",
+        foreign_keys="LotOptionValue.option_id",
     )
 
 
@@ -184,12 +189,18 @@ class LotOptionValue(CreateUpdateMixin, Base):
     label: Mapped[str255]
     code: Mapped[str100]
     description: Mapped[str | None] = mapped_column(Text)
-    price_value: Mapped[float] = mapped_column(Float, default=0)
+    price_value: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2),
+        default=Decimal("0"),
+    )
     sort_order: Mapped[int] = mapped_column(default=0)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    option: Mapped[LotOption] = relationship(back_populates="values")
+    option: Mapped[LotOption] = relationship(
+        back_populates="values",
+        foreign_keys="LotOptionValue.option_id",
+    )
 
 
 class ServicePage(CreateUpdateMixin, Base):

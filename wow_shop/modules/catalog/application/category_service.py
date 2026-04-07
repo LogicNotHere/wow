@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import NamedTuple
 
 from sqlalchemy import select
@@ -27,6 +26,7 @@ from wow_shop.modules.catalog.infrastructure.db.models import (
     ServiceCategoryStatus,
 )
 from wow_shop.shared.utils.missing import Missing, MissingType
+from wow_shop.shared.utils.time import now_utc
 
 
 def _normalize_name(name: str) -> str:
@@ -398,7 +398,7 @@ def edit_category_bl(
 
     if category.status == ServiceCategoryStatus.DELETED:
         if category.deleted_at is None:
-            category.deleted_at = datetime.now(timezone.utc)
+            category.deleted_at = now_utc()
     else:
         category.deleted_at = None
 
@@ -457,7 +457,7 @@ async def soft_delete_category(
         category.status = ServiceCategoryStatus.DELETED
         update_required = True
     if category.deleted_at is None:
-        category.deleted_at = datetime.now(timezone.utc)
+        category.deleted_at = now_utc()
         update_required = True
 
     if update_required:

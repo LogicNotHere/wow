@@ -81,9 +81,9 @@ staff_router = APIRouter(prefix="/lots", tags=["lots"])
 # Lot
 # ---------------------------
 @public_router.get(
-    "/{game_slug}/{category_slug}",
+    "/",
     status_code=status.HTTP_200_OK,
-    description="Read public catalog lots list by game/category slugs.",
+    description="Read public catalog lots list with optional filters.",
     response_model=BaseHttpResponseModel[ListResponsesOnce[LotListItemResponse]],
     responses={
         status.HTTP_200_OK: {
@@ -94,7 +94,7 @@ staff_router = APIRouter(prefix="/lots", tags=["lots"])
         },
         status.HTTP_404_NOT_FOUND: {
             "model": ErrorResponseModel,
-            "description": "Game or category not found.",
+            "description": "Game or category not found for selected scope.",
         },
     },
 )

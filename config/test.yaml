@@ -1,0 +1,23 @@
+app:
+  env: test
+  debug: true
+
+db:
+  url: postgresql+asyncpg://postgres:postgres@postgres:5432/wow_shop_test
+
+redis:
+  url: redis://redis:6379/1
+
+jwt:
+  secret_key: test-secret
+  algorithm: HS256
+  issuer: wow-shop-test
+  access_ttl_minutes: 20
+  refresh_ttl_days: 30
+
+cors:
+  allow_origins:
+    - http://localhost:3000
+
+sentry:
+  dsn: ""

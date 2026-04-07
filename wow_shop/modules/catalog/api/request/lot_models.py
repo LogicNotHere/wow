@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Annotated
 
 from pydantic import Field, StringConstraints
@@ -37,7 +38,7 @@ class LotCommonRequest(BaseRequestModel):
     slug: LotSlug
     description: str | None = None
     status: ServiceLotStatus = ServiceLotStatus.ACTIVE
-    base_price_eur: float = Field(default=0, ge=0)
+    base_price_eur: Decimal = Field(default=Decimal("0"), ge=0)
 
 
 class CreateLotRequest(LotCommonRequest):
@@ -126,7 +127,7 @@ class CreateLotOptionValueRequest(BaseRequestModel):
     label: OptionLabel
     code: OptionCode
     description: str | None = None
-    price_value: float = Field(default=0, ge=0)
+    price_value: Decimal = Field(default=Decimal("0"), ge=0)
     sort_order: int = Field(default=0, ge=0)
     is_default: bool = False
     is_active: bool = True

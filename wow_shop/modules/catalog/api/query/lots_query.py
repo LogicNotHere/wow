@@ -112,16 +112,21 @@ class GetStaffLotsQueryModel(BaseRequestModel):
 
 
 class GetPublicLotsQueryModel(BaseRequestModel):
-    game_slug: str
-    category_slug: str
+    game_slug: str | None = None
+    category_slug: str | None = None
+    lot_ids: list[IntId] | None = None
+    limit: int = 20
+    offset: int = 0
 
     @staticmethod
     def _normalize_slug(
-        value: str,
+        value: str | None,
         *,
         field_label: str,
         pattern: object,
-    ) -> str:
+    ) -> str | None:
+        if value is None:
+            return None
         normalized_value = value.strip().lower()
         if not normalized_value:
             raise CatalogValidationError(f"{field_label} is required.")
@@ -132,7 +137,13 @@ class GetPublicLotsQueryModel(BaseRequestModel):
             )
         return normalized_value
 
-    async def _resolve_scope_category_id(self) -> int:
+    @property
+    def _normalized_lot_ids(self) -> tuple[int, ...] | None:
+        if self.lot_ids is None:
+            return None
+        return tuple(dict.fromkeys(self.lot_ids))
+
+    async def _resolve_scope_ids(self) -> tuple[int | None, int | None]:
         normalized_game_slug = self._normalize_slug(
             self.game_slug,
             field_label="Game slug",
@@ -143,6 +154,14 @@ class GetPublicLotsQueryModel(BaseRequestModel):
             field_label="Category slug",
             pattern=CATEGORY_SLUG_PATTERN,
         )
+
+        if normalized_category_slug is not None and normalized_game_slug is None:
+            raise CatalogValidationError(
+                "Game slug is required when category slug is provided."
+            )
+
+        if normalized_game_slug is None:
+            return (None, None)
 
         game_id_query = (
             select(Game.id)
@@ -156,6 +175,9 @@ class GetPublicLotsQueryModel(BaseRequestModel):
         game_id = game_result.scalar_one_or_none()
         if game_id is None:
             raise GameNotFoundError("Game not found.")
+
+        if normalized_category_slug is None:
+            return (game_id, None)
 
         category_id_query = apply_public_category_visibility(
             select(ServiceCategory.id)
@@ -171,25 +193,43 @@ class GetPublicLotsQueryModel(BaseRequestModel):
         category_id = category_result.scalar_one_or_none()
         if category_id is None:
             raise CategoryNotFoundError("Category not found.")
-        return category_id
+        return (game_id, category_id)
 
-    def build_query(self, *, category_id: int) -> Select[tuple[ServiceLot]]:
+    def build_query(
+        self,
+        *,
+        game_id: int | None,
+        category_id: int | None,
+    ) -> Select[tuple[ServiceLot]]:
         query = (
             select(ServiceLot)
             .join(ServiceLot.category)
             .join(ServiceCategory.game)
             .join(ServiceLot.page)
             .options(joinedload(ServiceLot.category))
-            .where(ServiceLot.category_id == category_id)
         )
+        if game_id is not None:
+            query = query.where(ServiceCategory.game_id == game_id)
+        if category_id is not None:
+            query = query.where(ServiceLot.category_id == category_id)
+        if self._normalized_lot_ids is not None:
+            query = query.where(ServiceLot.id.in_(self._normalized_lot_ids))
         query = apply_public_lot_visibility(query)
-        return query.order_by(
+        query = query.order_by(
+            ServiceCategory.sort_order.asc(),
+            ServiceCategory.id.asc(),
             ServiceLot.id.asc(),
         )
+        return query.limit(self.limit).offset(self.offset)
 
     async def get_items(self) -> list[ServiceLot]:
-        category_id = await self._resolve_scope_category_id()
-        result = await s.db.execute(self.build_query(category_id=category_id))
+        game_id, category_id = await self._resolve_scope_ids()
+        result = await s.db.execute(
+            self.build_query(
+                game_id=game_id,
+                category_id=category_id,
+            )
+        )
         return list(result.scalars().all())
 
 
@@ -279,12 +319,18 @@ def get_staff_lots_query_model(
 
 
 def get_public_lots_query_model(
-    game_slug: GameSlug = Path(),
-    category_slug: CategorySlug = Path(),
+    game_slug: GameSlug | None = Query(default=None),
+    category_slug: CategorySlug | None = Query(default=None),
+    lot_ids: list[IntId] | None = Query(default=None),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
 ) -> GetPublicLotsQueryModel:
     return GetPublicLotsQueryModel(
         game_slug=game_slug,
         category_slug=category_slug,
+        lot_ids=lot_ids,
+        limit=limit,
+        offset=offset,
     )
 
 

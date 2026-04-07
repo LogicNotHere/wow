@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from decimal import Decimal
 from typing import NamedTuple
 
 from sqlalchemy import select
@@ -45,6 +45,7 @@ from wow_shop.modules.catalog.infrastructure.db.models import (
     ServicePageStatus,
 )
 from wow_shop.shared.utils.missing import Missing, MissingType
+from wow_shop.shared.utils.time import now_utc
 
 
 def _normalize_required_text(value: str, *, field_label: str) -> str:
@@ -150,7 +151,7 @@ def _validate_optional_positive_id(
 
 
 def _validate_non_negative_number(
-    value: float,
+    value: Decimal | float | int,
     *,
     field_label: str,
 ) -> None:
@@ -528,7 +529,7 @@ def create_lot_bl(
     slug: str,
     description: str | None,
     status: ServiceLotStatus,
-    base_price_eur: float,
+    base_price_eur: Decimal,
 ) -> ServiceLot:
     normalized_name = _normalize_lot_name(name)
     normalized_slug = _normalize_lot_slug(slug)
@@ -572,7 +573,7 @@ def edit_lot_bl(
     slug: str | MissingType,
     description: str | None | MissingType,
     status: ServiceLotStatus | MissingType,
-    base_price_eur: float | MissingType,
+    base_price_eur: Decimal | MissingType,
 ) -> LotEditScope:
     if not any(
         (
@@ -625,7 +626,7 @@ def edit_lot_bl(
 
     if lot.status == ServiceLotStatus.DELETED:
         if lot.deleted_at is None:
-            lot.deleted_at = datetime.now(timezone.utc)
+            lot.deleted_at = now_utc()
     else:
         lot.deleted_at = None
 
@@ -709,7 +710,7 @@ def edit_lot_option_value_bl(
     label: str | MissingType,
     code: str | MissingType,
     description: str | None | MissingType,
-    price_value: float | MissingType,
+    price_value: Decimal | MissingType,
     is_default: bool | MissingType,
     is_active: bool | MissingType,
 ) -> LotOptionValueEditScope:
@@ -795,7 +796,7 @@ async def soft_delete_lot(
         lot.status = ServiceLotStatus.DELETED
         update_required = True
     if lot.deleted_at is None:
-        lot.deleted_at = datetime.now(timezone.utc)
+        lot.deleted_at = now_utc()
         update_required = True
 
     if update_required:
@@ -996,7 +997,7 @@ async def change_lot_page_status(
 
     if status == ServicePageStatus.PUBLISHED:
         page.status = ServicePageStatus.PUBLISHED
-        page.published_at = datetime.now(timezone.utc)
+        page.published_at = now_utc()
     else:
         page.status = ServicePageStatus.DRAFT
         page.published_at = None
@@ -1028,7 +1029,8 @@ async def create_lot_page_block(
 
     new_block = ServicePageBlock(
         page_id=page.id,
-        position=0,
+        # Use a temporary non-conflicting position before full reindex.
+        position=-(len(ordered_blocks) + 1),
         type=normalized_type,
         payload_json=payload_json,
     )
@@ -1221,7 +1223,7 @@ async def create_lot_option_value(
     label: str,
     code: str,
     description: str | None,
-    price_value: float,
+    price_value: Decimal,
     sort_order: int,
     is_default: bool,
     is_active: bool,

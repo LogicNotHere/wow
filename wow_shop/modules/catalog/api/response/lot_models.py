@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from datetime import datetime
 from typing import Self
 
@@ -32,7 +33,7 @@ class LotListItemResponse(BaseResponseDataModel):
     slug: str
     description: str | None
     status: ServiceLotStatus
-    base_price_eur: float
+    base_price_eur: Decimal
 
     @classmethod
     def build(cls, lot: ServiceLot) -> Self:
@@ -56,7 +57,7 @@ class StaffLotListItemResponse(BaseResponseDataModel):
     slug: str
     description: str | None
     status: ServiceLotStatus
-    base_price_eur: float
+    base_price_eur: Decimal
 
     @classmethod
     def build(cls, lot: ServiceLot) -> Self:
@@ -77,7 +78,7 @@ class LotOptionValueResponse(BaseResponseDataModel):
     label: str
     code: str
     description: str | None
-    price_value: float
+    price_value: Decimal
     sort_order: int
     is_default: bool
     is_active: bool
@@ -197,7 +198,7 @@ class LotDetailResponse(BaseResponseDataModel):
     slug: str
     description: str | None
     status: ServiceLotStatus
-    base_price_eur: float
+    base_price_eur: Decimal
     options: list[LotOptionResponse]
     page: LotPageResponse | None
 
